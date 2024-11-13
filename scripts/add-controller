@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+print_help() {
+  cat <<-EOF
+
+	Add a controller to a canister, without a requirement to already be a
+	controller.
+	This can only work when PocketIC is running.
+	EOF
+}
+
+SOURCE_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+
+# Source the clap.bash file ---------------------------------------------------
+source "$SOURCE_DIR/clap.bash"
+# Define options
+clap.define short=c long=canister desc="Name or ID of the canister to control" variable=CANISTER default=""
+clap.define short=p long=principal desc="Name or ID of the canister to control" variable=PRINCIPAL_TO_ADD default="$(dfx identity get-principal)"
+
+# Source the output file ----------------------------------------------------------
+source "$(clap.build)"
+
+REPLICA_PORT="$(cd ~; dfx info replica-port)"
+SERVER_URL="http://localhost:$REPLICA_PORT"
+
+CANISTER_ID="$(dfx canister id "$CANISTER")"
+CURRENT_CONTROLLER="$(dfx canister info "$CANISTER" | grep '^Controllers:' | awk '{print $2}')"
+
+set -x
+
+RUST_BACKTRACE=1 ./pocket-ic-cli --server-url "$SERVER_URL" canister --instance-id 0 --sender "$CURRENT_CONTROLLER" "$CANISTER_ID" update-settings --add-controller "$PRINCIPAL_TO_ADD"
