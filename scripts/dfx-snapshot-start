@@ -65,7 +65,8 @@ echo "*  starting the replica may just hang after a panic.                *"
 echo "*                                                                   *"
 echo "*********************************************************************"
 
-DFX_ARGS=()
+set -x
+DFX_ARGS=("--pocketic")
 
 if [ "${DFX_HOST:-}" ]; then
   DFX_ARGS+=("--host" "$DFX_HOST")
